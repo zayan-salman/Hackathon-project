@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HCM Lite | Human Resource Management</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="background-shape shape-one"></div>
+  <div class="background-shape shape-two"></div>
+
+  <header class="topbar">
+    <a href="#" class="brand">
+      <span class="brand-icon">H</span>
+      <span>HCM<span class="brand-light">Lite</span></span>
+    </a>
+    <span class="hackathon-tag">SAYLANI HACKATHON</span>
+  </header>
+
+  <main class="main-container">
+    <section class="welcome-panel">
+      <span class="eyebrow">HUMAN CAPITAL MANAGEMENT</span>
+      <h1>People first.<br><span>Work smarter.</span></h1>
+      <p>One simple workspace to manage your team, attendance and everyday HR tasks.</p>
+
+      <div class="feature-list">
+        <div><span class="feature-check">✓</span> Simple employee management</div>
+        <div><span class="feature-check">✓</span> Attendance and leave tracking</div>
+        <div><span class="feature-check">✓</span> One place for your HR work</div>
+      </div>
+
+      <div class="welcome-bottom">
+        <span class="status-dot"></span>
+        Beginner Track · HTML, CSS & JavaScript
+      </div>
+    </section>
+
+    <section class="auth-area">
+      <div class="auth-card">
+        <div class="card-heading">
+          <div class="mini-icon">✦</div>
+          <h2 id="form-title">Welcome back</h2>
+          <p id="form-description">Sign in to continue to your workspace.</p>
+        </div>
+
+        <div id="message" class="message" role="status" aria-live="polite" hidden></div>
+
+        <form id="setup-form" hidden>
+          <div class="setup-note">
+            <strong>First-time setup</strong>
+            <p>Create your company and the first Admin account.</p>
+          </div>
+
+          <label for="company-name">Company name</label>
+          <input id="company-name" type="text" placeholder="e.g. Zaitoon Technologies" required maxlength="80">
+          <small class="field-error" id="company-error"></small>
+
+          <label for="setup-name">Admin full name</label>
+          <input id="setup-name" type="text" placeholder="Your full name" required maxlength="80">
+          <small class="field-error" id="name-error"></small>
+
+          <label for="setup-email">Email address</label>
+          <input id="setup-email" type="email" placeholder="admin@company.com" required>
+          <small class="field-error" id="setup-email-error"></small>
+
+          <label for="setup-password">Password</label>
+          <input id="setup-password" type="password" placeholder="At least 6 characters" minlength="6" required>
+          <small class="field-error" id="setup-password-error"></small>
+
+          <button class="primary-button" type="submit">Create company & Admin <span>→</span></button>
+        </form>
+
+        <form id="login-form">
+          <label for="login-email">Email address</label>
+          <input id="login-email" type="email" placeholder="Enter your email" autocomplete="username" required>
+
+          <label for="login-password">Password</label>
+          <div class="password-wrap">
+            <input id="login-password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
+            <button id="toggle-password" class="password-toggle" type="button" aria-label="Show password">Show</button>
+          </div>
+
+          <button class="primary-button" type="submit">Sign in to workspace <span>→</span></button>
+        </form>
+
+        <div class="secure-note">
+          <span>▣</span> Demo app · Data stays in this browser
+        </div>
+      </div>
+      <p class="copyright">© 2026 HCM Lite · Saylani Hackathon</p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
