@@ -7,7 +7,10 @@ const LEAVES_KEY = "hcm_leaves";
 
 const setupForm = document.getElementById("setup-form");
 const loginForm = document.getElementById("login-form");
-const messageBox = document.getElementById("message");
+
+function getMessageBox() {
+  return document.getElementById("message");
+}
 
 function readData(key, fallback) {
   try {
@@ -23,12 +26,18 @@ function saveData(key, data) {
 }
 
 function showMessage(message, type = "error") {
+  const messageBox = getMessageBox();
+  if (!messageBox) return;
+
   messageBox.textContent = message;
   messageBox.className = "message " + type;
   messageBox.hidden = false;
 }
 
 function clearMessage() {
+  const messageBox = getMessageBox();
+  if (!messageBox) return;
+
   messageBox.hidden = true;
   messageBox.textContent = "";
 }
@@ -157,7 +166,8 @@ loginForm.addEventListener("submit", function (event) {
 
   const users = readData(USERS_KEY, []);
   const user = users.find(item =>
-    item.email.toLowerCase() === email && item.password === password
+    String(item.email || "").trim().toLowerCase() === email &&
+    item.password === password
   );
 
   if (!user) {
@@ -193,11 +203,6 @@ function renderDashboard(user) {
   const today = getToday();
 
   const todaysRecords = attendance.filter(record => record.date === today);
-  const todaysLeaves = leaves.filter(leave =>
-    leave.status === "Approved" &&
-    leave.from <= today &&
-    leave.to >= today
-  );
 
   const ownToday = attendance.find(record =>
     record.userId === user.id && record.date === today
@@ -231,33 +236,43 @@ function renderDashboard(user) {
         ${isAdmin ? `
           <article class="stat-card">
             <span class="stat-symbol blue-symbol">♙</span>
-            <p>Total employees</p><h3>${users.filter(item => item.role === "employee").length}</h3>
+            <p>Total employees</p>
+            <h3>${users.filter(item => item.role === "employee").length}</h3>
             <small>Registered team members</small>
           </article>
+
           <article class="stat-card">
             <span class="stat-symbol green-symbol">✓</span>
-            <p>Checked in today</p><h3>${new Set(todaysRecords.map(item => item.userId)).size}</h3>
+            <p>Checked in today</p>
+            <h3>${new Set(todaysRecords.map(item => item.userId)).size}</h3>
             <small>Employees with attendance</small>
           </article>
+
           <article class="stat-card">
             <span class="stat-symbol orange-symbol">◷</span>
-            <p>Pending leaves</p><h3>${leaves.filter(item => item.status === "Pending").length}</h3>
+            <p>Pending leaves</p>
+            <h3>${leaves.filter(item => item.status === "Pending").length}</h3>
             <small>Requests awaiting review</small>
           </article>
         ` : `
           <article class="stat-card">
             <span class="stat-symbol blue-symbol">◷</span>
-            <p>Today's check-in</p><h3>${ownToday?.checkIn || "--:--"}</h3>
+            <p>Today's check-in</p>
+            <h3>${ownToday?.checkIn || "--:--"}</h3>
             <small>${ownToday ? ownToday.status : "Not checked in yet"}</small>
           </article>
+
           <article class="stat-card">
             <span class="stat-symbol green-symbol">✓</span>
-            <p>Check-out</p><h3>${ownToday?.checkOut || "--:--"}</h3>
+            <p>Check-out</p>
+            <h3>${ownToday?.checkOut || "--:--"}</h3>
             <small>${ownToday?.checkOut ? "Workday completed" : "Not checked out yet"}</small>
           </article>
+
           <article class="stat-card">
             <span class="stat-symbol orange-symbol">▤</span>
-            <p>Leave balance</p><h3>${getLeaveBalance(user.id)}</h3>
+            <p>Leave balance</p>
+            <h3>${getLeaveBalance(user.id)}</h3>
             <small>Working days remaining</small>
           </article>
         `}
@@ -266,72 +281,123 @@ function renderDashboard(user) {
       <div class="content-grid">
         <section class="dash-panel">
           <div class="panel-heading">
-            <div><h2>${isAdmin ? "Quick actions" : "My attendance"}</h2>
-            <p>${isAdmin ? "Manage your workplace" : "Your daily check-in and check-out"}</p></div>
+            <div>
+              <h2>${isAdmin ? "Quick actions" : "My attendance"}</h2>
+              <p>${isAdmin ? "Manage your workplace" : "Your daily check-in and check-out"}</p>
+            </div>
           </div>
+
           ${isAdmin ? `
             <form id="employee-form" class="employee-form">
               <h3>Add an employee</h3>
+
               <div class="form-grid">
-                <div><label for="emp-name">Full name</label><input id="emp-name" required maxlength="80" placeholder="Employee name"></div>
-                <div><label for="emp-email">Email</label><input id="emp-email" type="email" required placeholder="employee@email.com"></div>
-                <div><label for="emp-password">Temporary password</label><input id="emp-password" type="password" minlength="6" required placeholder="At least 6 characters"></div>
-                <div><label for="emp-department">Department</label><input id="emp-department" required maxlength="60" placeholder="e.g. IT"></div>
-                <div><label for="emp-salary">Monthly salary</label><input id="emp-salary" type="number" min="1" step="0.01" required placeholder="e.g. 35000"></div>
+                <div>
+                  <label for="emp-name">Full name</label>
+                  <input id="emp-name" required maxlength="80" placeholder="Employee name">
+                </div>
+
+                <div>
+                  <label for="emp-email">Email</label>
+                  <input id="emp-email" type="email" required placeholder="employee@email.com">
+                </div>
+
+                <div>
+                  <label for="emp-password">Temporary password</label>
+                  <input id="emp-password" type="password" minlength="6" required placeholder="At least 6 characters">
+                </div>
+
+                <div>
+                  <label for="emp-department">Department</label>
+                  <input id="emp-department" required maxlength="60" placeholder="e.g. IT">
+                </div>
+
+                <div>
+                  <label for="emp-salary">Monthly salary</label>
+                  <input id="emp-salary" type="number" min="1" step="0.01" required placeholder="e.g. 35000">
+                </div>
               </div>
+
               <button class="primary-button" type="submit">Create employee login +</button>
               <div id="employee-message" class="message" hidden></div>
             </form>
 
             <div class="panel-heading employee-list-heading">
-              <div><h2>Employee directory</h2><p>Employee accounts saved in this browser</p></div>
+              <div>
+                <h2>Employee directory</h2>
+                <p>Employee accounts saved in this browser</p>
+              </div>
             </div>
+
             <div class="table-wrap">
               <table>
-                <thead><tr><th>Name</th><th>Department</th><th>Email</th></tr></thead>
+                <thead>
+                  <tr><th>Name</th><th>Department</th><th>Email</th></tr>
+                </thead>
                 <tbody>
                   ${users.filter(item => item.role === "employee").map(item => `
                     <tr>
                       <td>${escapeHTML(item.name)}</td>
                       <td>${escapeHTML(item.department)}</td>
                       <td>${escapeHTML(item.email)}</td>
-                    </tr>`).join("") || `<tr><td colspan="3">No employees yet. Add your first employee above.</td></tr>`}
+                    </tr>
+                  `).join("") || `
+                    <tr><td colspan="3">No employees yet. Add your first employee above.</td></tr>
+                  `}
                 </tbody>
               </table>
             </div>
 
             <div class="panel-heading employee-list-heading">
-              <div><h2>Leave requests</h2><p>Review employee applications</p></div>
+              <div>
+                <h2>Leave requests</h2>
+                <p>Review employee applications</p>
+              </div>
             </div>
+
             ${renderAdminLeaves(leaves, users)}
           ` : `
             <div class="attendance-actions">
               <p>Check in when your workday starts. Check out when you finish.</p>
+
               <div class="attendance-times">
                 <div><span>Check-in</span><strong>${ownToday?.checkIn || "--:--"}</strong></div>
                 <div><span>Check-out</span><strong>${ownToday?.checkOut || "--:--"}</strong></div>
               </div>
+
               <div class="action-buttons">
                 <button id="check-in-button" class="primary-button" ${ownToday?.checkIn ? "disabled" : ""}>Check in</button>
                 <button id="check-out-button" class="secondary-button" ${!ownToday?.checkIn || ownToday?.checkOut ? "disabled" : ""}>Check out</button>
               </div>
+
               <div id="attendance-message" class="message" hidden></div>
             </div>
 
             <form id="leave-form" class="employee-form">
               <h3>Apply for leave</h3>
+
               <label for="leave-type">Leave type</label>
-              <select id="leave-type" required><option value="Casual">Casual</option><option value="Sick">Sick</option></select>
+              <select id="leave-type" required>
+                <option value="Casual">Casual</option>
+                <option value="Sick">Sick</option>
+              </select>
+
               <div class="form-grid">
                 <div><label for="leave-from">From</label><input type="date" id="leave-from" required></div>
                 <div><label for="leave-to">To</label><input type="date" id="leave-to" required></div>
               </div>
+
               <label for="leave-reason">Reason</label>
               <textarea id="leave-reason" rows="3" maxlength="300" required placeholder="Briefly explain your request"></textarea>
+
               <button class="primary-button" type="submit">Submit leave request</button>
               <div id="leave-message" class="message" hidden></div>
             </form>
-            <div class="panel-heading employee-list-heading"><div><h2>My leave requests</h2></div></div>
+
+            <div class="panel-heading employee-list-heading">
+              <div><h2>My leave requests</h2></div>
+            </div>
+
             ${renderOwnLeaves(leaves, user.id)}
           `}
         </section>
@@ -340,17 +406,25 @@ function renderDashboard(user) {
           <div class="panel-heading">
             <div><h2>Smart helper ✦</h2><p>Ask about your HR data</p></div>
           </div>
-          <div class="helper-intro">Hello ${escapeHTML(user.name.split(" ")[0])}! Ask me about ${isAdmin ? "your employees, attendance or pending leaves." : "your attendance or remaining leave balance."}</div>
+
+          <div class="helper-intro">
+            Hello ${escapeHTML(user.name.split(" ")[0])}! Ask me about
+            ${isAdmin ? "your employees, attendance or pending leaves." : "your attendance or remaining leave balance."}
+          </div>
+
           <div id="chat-messages" class="chat-messages" aria-live="polite">
             <div class="chat-bubble bot-bubble">Hi! I'm your HCM helper. What would you like to know?</div>
           </div>
+
           <form id="helper-form" class="helper-form">
             <input id="helper-input" aria-label="Ask the HR helper" placeholder="Ask a question..." required maxlength="250">
             <button type="submit" aria-label="Send question">➤</button>
           </form>
+
           <p class="helper-disclaimer">Answers use the saved data in this browser.</p>
         </aside>
       </div>
+
       <footer class="dash-footer">HCM Lite · ${escapeHTML(company.name)} · Beginner Track</footer>
     </section>
   `;
@@ -359,8 +433,11 @@ function renderDashboard(user) {
 
   if (isAdmin) {
     document.getElementById("employee-form").addEventListener("submit", addEmployee);
+
     document.querySelectorAll("[data-leave-action]").forEach(button => {
-      button.addEventListener("click", () => updateLeave(button.dataset.id, button.dataset.leaveAction));
+      button.addEventListener("click", () =>
+        updateLeave(button.dataset.id, button.dataset.leaveAction)
+      );
     });
   } else {
     document.getElementById("check-in-button").addEventListener("click", () => checkIn(user));
@@ -397,7 +474,7 @@ function addEmployee(event) {
     return employeeMessage("Password kam az kam 6 characters ka hona chahiye.", "error");
   }
 
-  if (users.some(item => item.email.toLowerCase() === email)) {
+  if (users.some(item => String(item.email || "").trim().toLowerCase() === email)) {
     return employeeMessage("Ye email pehle se registered hai.", "error");
   }
 
@@ -417,10 +494,13 @@ function addEmployee(event) {
 
   try {
     saveData(USERS_KEY, users);
+
     const session = readData(SESSION_KEY, null);
     const admin = users.find(item => item.id === session?.userId);
 
-    renderDashboard(admin);
+    if (admin) {
+      renderDashboard(admin);
+    }
   } catch {
     employeeMessage("Employee save nahi ho saka.", "error");
   }
@@ -428,6 +508,8 @@ function addEmployee(event) {
 
 function employeeMessage(message, type) {
   const box = document.getElementById("employee-message");
+  if (!box) return;
+
   box.textContent = message;
   box.className = "message " + type;
   box.hidden = false;
@@ -464,7 +546,9 @@ function checkIn(user) {
 
 function checkOut(user) {
   const attendance = readData(ATTENDANCE_KEY, []);
-  const record = attendance.find(item => item.userId === user.id && item.date === getToday());
+  const record = attendance.find(item =>
+    item.userId === user.id && item.date === getToday()
+  );
 
   if (!record || !record.checkIn || record.checkOut) return;
 
@@ -509,6 +593,7 @@ function applyLeave(event, user) {
   }
 
   const days = countWorkingDays(from, to);
+
   if (days < 1) {
     return leaveMessage("Selected dates mein working day nahi hai.", "error");
   }
@@ -536,6 +621,7 @@ function applyLeave(event, user) {
 function countWorkingDays(from, to) {
   const company = readData(COMPANY_KEY, {});
   const workingDays = company.workingDays || [1, 2, 3, 4, 5];
+
   let count = 0;
   const date = new Date(from + "T12:00:00");
   const end = new Date(to + "T12:00:00");
@@ -570,6 +656,8 @@ function getLeaveBalance(userId) {
 
 function leaveMessage(message, type) {
   const box = document.getElementById("leave-message");
+  if (!box) return;
+
   box.textContent = message;
   box.className = "message " + type;
   box.hidden = false;
@@ -584,10 +672,12 @@ function renderOwnLeaves(leaves, userId) {
 
   return `<div class="leave-list">${own.map(item => `
     <div class="leave-item">
-      <div><strong>${escapeHTML(item.type)} leave</strong>
-      <p>${escapeHTML(item.from)} to ${escapeHTML(item.to)} · ${item.days} working day(s)</p>
-      <p>${escapeHTML(item.reason)}</p>
-      ${item.comment ? `<p>Admin comment: ${escapeHTML(item.comment)}</p>` : ""}</div>
+      <div>
+        <strong>${escapeHTML(item.type)} leave</strong>
+        <p>${escapeHTML(item.from)} to ${escapeHTML(item.to)} · ${item.days} working day(s)</p>
+        <p>${escapeHTML(item.reason)}</p>
+        ${item.comment ? `<p>Admin comment: ${escapeHTML(item.comment)}</p>` : ""}
+      </div>
       <span class="leave-status status-${item.status.toLowerCase()}">${escapeHTML(item.status)}</span>
     </div>
   `).join("")}</div>`;
@@ -610,6 +700,7 @@ function renderAdminLeaves(leaves, users) {
         <p>${escapeHTML(item.reason)}</p>
         <label for="comment-${escapeHTML(item.id)}">Admin comment</label>
         <input id="comment-${escapeHTML(item.id)}" maxlength="200" placeholder="Optional comment">
+
         <div class="action-buttons">
           <button class="small-action approve" data-leave-action="Approved" data-id="${escapeHTML(item.id)}">Approve</button>
           <button class="small-action reject" data-leave-action="Rejected" data-id="${escapeHTML(item.id)}">Reject</button>
@@ -634,23 +725,28 @@ function updateLeave(id, status) {
   const session = readData(SESSION_KEY, null);
   const admin = readData(USERS_KEY, []).find(item => item.id === session?.userId);
 
-  if (admin?.role === "admin") renderDashboard(admin);
+  if (admin?.role === "admin") {
+    renderDashboard(admin);
+  }
 }
 
 // Smart helper: answers from saved app data, not an external AI
 function askHelper(user) {
   const input = document.getElementById("helper-input");
   const question = input.value.trim().toLowerCase();
+
   if (!question) return;
 
   const chat = document.getElementById("chat-messages");
   const userBubble = document.createElement("div");
+
   userBubble.className = "chat-bubble user-bubble";
   userBubble.textContent = input.value.trim();
   chat.appendChild(userBubble);
 
   const reply = getHelperReply(question, user);
   const botBubble = document.createElement("div");
+
   botBubble.className = "chat-bubble bot-bubble";
   botBubble.textContent = reply;
   chat.appendChild(botBubble);
@@ -667,13 +763,18 @@ function getHelperReply(question, user) {
   const isAdmin = user.role === "admin";
 
   if (question.includes("employee") || question.includes("team")) {
-    if (!isAdmin) return "Aap sirf apne personal records dekh sakte hain.";
+    if (!isAdmin) {
+      return "Aap sirf apne personal records dekh sakte hain.";
+    }
 
     return `Company mein ${users.filter(item => item.role === "employee").length} employees hain.`;
   }
 
-  if (question.includes("leave") && (question.includes("today") || question.includes("on leave"))) {
-    if (!isAdmin) return "Aap apni leave requests 'My leave requests' section mein dekh sakte hain.";
+  if (question.includes("leave") &&
+      (question.includes("today") || question.includes("on leave"))) {
+    if (!isAdmin) {
+      return "Aap apni leave requests 'My leave requests' section mein dekh sakte hain.";
+    }
 
     const onLeave = leaves.filter(item =>
       item.status === "Approved" && item.from <= today && item.to >= today
@@ -687,7 +788,8 @@ function getHelperReply(question, user) {
 
   if (question.includes("late")) {
     const records = attendance.filter(item =>
-      item.date === today && item.status === "Late" &&
+      item.date === today &&
+      item.status === "Late" &&
       (isAdmin || item.userId === user.id)
     );
 
@@ -698,19 +800,30 @@ function getHelperReply(question, user) {
         : "Aaj aapke record mein late check-in nahi hai.";
   }
 
-  if (question.includes("leave") && (question.includes("left") || question.includes("balance") || question.includes("remaining"))) {
+  if (question.includes("leave") &&
+      (question.includes("left") ||
+       question.includes("balance") ||
+       question.includes("remaining"))) {
     return `Aapki remaining leave balance ${getLeaveBalance(user.id)} working days hai.`;
   }
 
-  if (question.includes("attendance") || question.includes("present") || question.includes("check in")) {
+  if (question.includes("attendance") ||
+      question.includes("present") ||
+      question.includes("check in")) {
     if (!isAdmin) {
-      const record = attendance.find(item => item.userId === user.id && item.date === today);
+      const record = attendance.find(item =>
+        item.userId === user.id && item.date === today
+      );
+
       return record
         ? `Aaj check-in: ${record.checkIn}, check-out: ${record.checkOut || "abhi nahi"}, status: ${record.status}.`
         : "Aaj aapne abhi check-in nahi kiya.";
     }
 
-    const present = new Set(attendance.filter(item => item.date === today).map(item => item.userId)).size;
+    const present = new Set(
+      attendance.filter(item => item.date === today).map(item => item.userId)
+    ).size;
+
     return `Aaj ${present} employees ke attendance records hain.`;
   }
 
@@ -718,16 +831,23 @@ function getHelperReply(question, user) {
     const now = new Date();
     const day = now.getDay() || 7;
     const monday = new Date(now);
+
     monday.setDate(now.getDate() - day + 1);
+
     const start = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, "0")}-${String(monday.getDate()).padStart(2, "0")}`;
 
     const records = attendance.filter(item =>
-      item.userId === user.id && item.date >= start && item.date <= today && item.checkIn && item.checkOut
+      item.userId === user.id &&
+      item.date >= start &&
+      item.date <= today &&
+      item.checkIn &&
+      item.checkOut
     );
 
     const minutes = records.reduce((sum, item) => {
       const [ih, im] = item.checkIn.split(":").map(Number);
       const [oh, om] = item.checkOut.split(":").map(Number);
+
       return sum + Math.max(0, oh * 60 + om - ih * 60 - im);
     }, 0);
 
@@ -739,80 +859,10 @@ function getHelperReply(question, user) {
     : "Aap apni attendance, check-in status aur remaining leave balance ke baare mein pooch sakte hain.";
 }
 
-// Logout
+// Logout: clear the session and reload the original HTML login screen.
 function logout() {
   localStorage.removeItem(SESSION_KEY);
-  showLogin();
-
-  document.querySelector(".main-container").innerHTML = `
-    <section class="welcome-panel">
-      <span class="eyebrow">HUMAN CAPITAL MANAGEMENT</span>
-      <h1>People first.<br><span>Work smarter.</span></h1>
-      <p>One simple workspace to manage your team, attendance and everyday HR tasks.</p>
-      <div class="feature-list">
-        <div><span class="feature-check">✓</span> Simple employee management</div>
-        <div><span class="feature-check">✓</span> Attendance and leave tracking</div>
-        <div><span class="feature-check">✓</span> One place for your HR work</div>
-      </div>
-      <div class="welcome-bottom"><span class="status-dot"></span> Beginner Track · HTML, CSS & JavaScript</div>
-    </section>
-    <section class="auth-area">
-      <div class="auth-card">
-        <div class="card-heading">
-          <div class="mini-icon">✦</div><h2 id="form-title">Welcome back</h2>
-          <p id="form-description">Sign in to continue to your workspace.</p>
-        </div>
-        <div id="message" class="message" role="status" aria-live="polite" hidden></div>
-        <form id="setup-form" hidden>
-          <label for="company-name">Company name</label><input id="company-name" required>
-          <label for="setup-name">Admin full name</label><input id="setup-name" required>
-          <label for="setup-email">Email address</label><input id="setup-email" type="email" required>
-          <label for="setup-password">Password</label><input id="setup-password" type="password" minlength="6" required>
-          <button class="primary-button" type="submit">Create company & Admin →</button>
-        </form>
-        <form id="login-form">
-          <label for="login-email">Email address</label><input id="login-email" type="email" required>
-          <label for="login-password">Password</label>
-          <div class="password-wrap"><input id="login-password" type="password" required><button id="toggle-password" class="password-toggle" type="button">Show</button></div>
-          <button class="primary-button" type="submit">Sign in to workspace →</button>
-        </form>
-        <div class="secure-note">▣ Demo app · Data stays in this browser</div>
-      </div>
-      <p class="copyright">© 2026 HCM Lite · Saylani Hackathon</p>
-    </section>`;
-
-  // Reconnect the form handlers after rebuilding the login screen.
-  initializeAuth();
-}
-
-function initializeAuth() {
-  document.getElementById("setup-form").addEventListener("submit", setupHandler);
-  document.getElementById("login-form").addEventListener("submit", loginHandler);
-  document.getElementById("toggle-password").addEventListener("click", togglePassword);
-}
-
-// Separate handler references for reconnecting after logout
-function setupHandler(event) {
-  event.preventDefault();
-  showMessage("Page reload karke setup form dobara open karo.");
-}
-
-function loginHandler(event) {
-  event.preventDefault();
-  const email = document.getElementById("login-email").value.trim().toLowerCase();
-  const password = document.getElementById("login-password").value;
-  const users = readData(USERS_KEY, []);
-  const user = users.find(item => item.email === email && item.password === password);
-
-  if (!user) return showMessage("Email ya password ghalat hai.");
-
-  saveData(SESSION_KEY, { userId: user.id });
-  renderDashboard(user);
-}
-
-function togglePassword() {
-  const passwordInput = document.getElementById("login-password");
-  passwordInput.type = passwordInput.type === "password" ? "text" : "password";
+  window.location.reload();
 }
 
 // Start app
